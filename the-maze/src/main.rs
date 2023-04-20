@@ -7,4 +7,8 @@ fn main() {
     m.deep_first_search();
 
     m.display();
+
+    let c = m.cells[m.cells.len() / 2].clone();
+
+    println!("x: {} y: {} way: {}", c.coord.x, c.coord.y, m.has_way_out(&c));
 }

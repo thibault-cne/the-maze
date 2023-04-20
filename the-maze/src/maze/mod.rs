@@ -1,6 +1,7 @@
+use std::collections::HashMap;
 use rand::seq::SliceRandom;
 
-use crate::maze::cells::{Cell, Direction};
+use crate::maze::cells::Cell;
 
 mod cells;
 
@@ -47,8 +48,7 @@ impl Maze {
                         self.cells.split_at_mut(std::cmp::max(current, i));
                     let cell1 = &mut lower_part[std::cmp::min(current, i)];
                     let cell2 = &mut higher_part[0];
-                    let dir = cell1.cell_direction(cell2);
-                    cell1.remove_wall(dir);
+                    cell1.remove_wall(cell2);
 
                     current = i
                 },
@@ -62,6 +62,106 @@ impl Maze {
                 }
             }
         }
+
+        self.add_way_out();
+    }
+
+    pub fn add_way_out(&mut self) {
+        let mut ways = Vec::new();
+
+        for i in 0..self.w_size {
+            let c1 = Cell::from_coord(i as isize, 0);
+            let c2 = Cell::from_coord(i as isize, self.h_size as isize - 1);
+
+            ways.push(c1);
+            ways.push(c2);
+        }
+
+        for i in 0..self.h_size {
+            let c1 = Cell::from_coord(0, i as isize);
+            let c2 = Cell::from_coord(self.w_size as isize - 1, i as isize);
+
+            ways.push(c1);
+            ways.push(c2);
+        }
+
+        let way = ways.choose(&mut rand::thread_rng()).unwrap();
+
+        let cells = self.cells.clone();
+        let mut indexes = cells
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| c.coord.x == way.coord.x && c.coord.y == way.coord.y)
+            .map(|(i, _)| i);
+
+        while let Some(i) = indexes.next() {
+            if way.coord.x == 0 {
+                self.cells[i].walls[0] = false;
+            }
+
+            if way.coord.x == self.w_size as isize - 1 {
+                self.cells[i].walls[2] = false;
+            }
+
+            if way.coord.y == 0 {
+                self.cells[i].walls[3] = false;
+            }
+
+            if way.coord.y == self.h_size as isize - 1 {
+                self.cells[i].walls[1] = false;
+            }
+        }
+            
+    }
+
+    pub fn has_way_out(&mut self, cell: &Cell) -> bool {
+        // Reset visited cells
+        self.cells
+            .iter_mut()
+            .for_each(|c| c.visited = false);
+
+        let mut queue: Vec<&Cell> = Vec::new();
+        let mut map: HashMap<(isize, isize), bool> = std::collections::HashMap::new();
+
+        queue.push(cell);
+
+        while let Some(cell) = queue.pop() {
+            map.insert((cell.coord.x, cell.coord.y), true);
+
+            if self.is_way_out(cell) {
+                return true;
+            }
+
+            let neighbors = cell.find_neighbors(&self.cells);
+            
+            for &neighbor in neighbors.iter() {
+                if cell.can_reach(&self.cells[neighbor]) && !map.contains_key(&(self.cells[neighbor].coord.x, self.cells[neighbor].coord.y)) {
+                    queue.push(&self.cells[neighbor]);
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn is_way_out(&self, cell: &Cell) -> bool {
+        if cell.coord.y == 0 && !cell.walls[3] {
+            return true;
+        }
+
+        if cell.coord.y as usize == self.w_size - 1 && !cell.walls[1] {
+            return true;
+        }
+
+        if cell.coord.x == 0 && !cell.walls[0] {
+            return true;
+        }
+
+        if cell.coord.x as usize == self.h_size - 1 && !cell.walls[2] {
+            return true;
+        }
+
+        false
     }
 
     pub fn display(&self) {
@@ -70,7 +170,7 @@ impl Maze {
         }
     }
 
-    pub fn display_row(&self, row: usize) {
+    fn display_row(&self, row: usize) {
         let mut upper_buffer = String::new();
         let mut mid_buffer = String::new();
         let mut lower_buffer = String::new();
@@ -83,27 +183,19 @@ impl Maze {
             upper_buffer.push_str("+");
             lower_buffer.push_str("+");
 
-            let neighbors = cell
-                .find_neighbors(&self.cells)
-                .iter()
-                .map(|&i| &self.cells[i])
-                .collect::<Vec<&Cell>>();
-
-            let walls = cell.common_walls(&neighbors);
-
-            if walls.contains(&Direction::Up) && cell.coord.x == 0 {
+            if cell.walls[0] && cell.coord.x == 0 {
                 upper_buffer.push_str("---");
             } else if cell.coord.x == 0 {
                 upper_buffer.push_str("   ");
             }
 
-            if walls.contains(&Direction::Down) {
+            if cell.walls[2] {
                 lower_buffer.push_str("---");
             } else {
                 lower_buffer.push_str("   ");
             }
             
-            if walls.contains(&Direction::Left) && cell.coord.y == 0 {
+            if cell.walls[3] && cell.coord.y == 0 {
                 mid_buffer.push_str("|");
             } else if cell.coord.y == 0 {
                 mid_buffer.push_str(" ");
@@ -111,7 +203,7 @@ impl Maze {
 
             mid_buffer.push_str("   ");
 
-            if walls.contains(&Direction::Right) {
+            if cell.walls[1] {
                 mid_buffer.push_str("|");
             } else {
                 mid_buffer.push_str(" ");
