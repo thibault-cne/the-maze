@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use rand::seq::SliceRandom;
 
-use crate::maze::cells::Cell;
+use crate::maze::cells::{Cell, Coord};
 
-mod cells;
+pub mod cells;
 
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct Maze {
     pub w_size: usize,
     pub h_size: usize,
@@ -20,11 +21,11 @@ impl Maze {
         // Fill the maze cells
         for i in 0..size {
             for j in 0..size {
-                cells.push(Cell::from_coord(i as isize, j as isize))
+                cells.push(Cell::from_coord(i, j))
             }
         }
 
-        Maze {
+        Self {
             w_size: size,
             h_size: size,
             cells
@@ -70,16 +71,16 @@ impl Maze {
         let mut ways = Vec::new();
 
         for i in 0..self.w_size {
-            let c1 = Cell::from_coord(i as isize, 0);
-            let c2 = Cell::from_coord(i as isize, self.h_size as isize - 1);
+            let c1 = Cell::from_coord(i, 0);
+            let c2 = Cell::from_coord(i, self.h_size - 1);
 
             ways.push(c1);
             ways.push(c2);
         }
 
         for i in 0..self.h_size {
-            let c1 = Cell::from_coord(0, i as isize);
-            let c2 = Cell::from_coord(self.w_size as isize - 1, i as isize);
+            let c1 = Cell::from_coord(0, i );
+            let c2 = Cell::from_coord(self.w_size - 1, i);
 
             ways.push(c1);
             ways.push(c2);
@@ -99,7 +100,7 @@ impl Maze {
                 self.cells[i].walls[0] = false;
             }
 
-            if way.coord.x == self.w_size as isize - 1 {
+            if way.coord.x == self.w_size - 1 {
                 self.cells[i].walls[2] = false;
             }
 
@@ -107,7 +108,7 @@ impl Maze {
                 self.cells[i].walls[3] = false;
             }
 
-            if way.coord.y == self.h_size as isize - 1 {
+            if way.coord.y == self.h_size - 1 {
                 self.cells[i].walls[1] = false;
             }
         }
@@ -121,7 +122,7 @@ impl Maze {
             .for_each(|c| c.visited = false);
 
         let mut queue: Vec<&Cell> = Vec::new();
-        let mut map: HashMap<(isize, isize), bool> = std::collections::HashMap::new();
+        let mut map: HashMap<(usize, usize), bool> = std::collections::HashMap::new();
 
         queue.push(cell);
 
@@ -149,7 +150,7 @@ impl Maze {
             return true;
         }
 
-        if cell.coord.y as usize == self.w_size - 1 && !cell.walls[1] {
+        if cell.coord.y == self.w_size - 1 && !cell.walls[1] {
             return true;
         }
 
@@ -157,27 +158,27 @@ impl Maze {
             return true;
         }
 
-        if cell.coord.x as usize == self.h_size - 1 && !cell.walls[2] {
+        if cell.coord.x == self.h_size - 1 && !cell.walls[2] {
             return true;
         }
 
         false
     }
 
-    pub fn display(&self) {
+    pub fn display(&self, position: Option<Coord>) {
         for i in 0..self.h_size {
-            self.display_row(i);
+            self.display_row(i, position);
         }
     }
 
-    fn display_row(&self, row: usize) {
+    fn display_row(&self, row: usize, position: Option<Coord>) {
         let mut upper_buffer = String::new();
         let mut mid_buffer = String::new();
         let mut lower_buffer = String::new();
 
         let mut cells = self.cells
             .iter()
-            .filter(|c| c.coord.x == row as isize);
+            .filter(|c| c.coord.x == row);
 
         while let Some(cell) = cells.next() {
             upper_buffer.push_str("+");
@@ -201,7 +202,10 @@ impl Maze {
                 mid_buffer.push_str(" ");
             }
 
-            mid_buffer.push_str("   ");
+            match position {
+                Some(coord) if cell.coord == coord => mid_buffer.push_str(" x "),
+                _ => mid_buffer.push_str("   "),
+            }
 
             if cell.walls[1] {
                 mid_buffer.push_str("|");
@@ -216,5 +220,13 @@ impl Maze {
     
         println!("{mid_buffer}");
         println!("{lower_buffer}");
+    }
+
+    pub fn get_center(&self) -> Option<Coord> {
+        Some(Coord { x: self.h_size / 2, y: self.w_size / 2 })
+    }
+
+    pub fn get_cell(&self, coord: Coord) -> Option<&Cell> {
+        self.cells.get(coord.x * self.w_size + coord.y)
     }
 }

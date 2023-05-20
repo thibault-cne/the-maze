@@ -1,14 +1,14 @@
 use std::fmt::Display;
 
 // Coordinates of a grid cell
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Coord {
-    pub x: isize,
-    pub y: isize
+    pub x: usize,
+    pub y: usize
 }
 
 // A cell of the grid
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Cell {
     // List of walls
     pub walls: [bool; 4],
@@ -21,7 +21,7 @@ pub struct Cell {
 }
 
 // Directions
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, serde::Deserialize)]
 pub enum Direction {
     Up,
     Left,
@@ -29,9 +29,21 @@ pub enum Direction {
     Down
 }
 
+impl Direction {
+    pub fn from_str(dir: &str) -> Option<Self> {
+        match dir {
+            "up" => Some(Self::Up),
+            "down" => Some(Self::Down),
+            "left" => Some(Self::Left),
+            "right" => Some(Self::Right),
+            _ => None
+        }
+    }
+}
+
 impl Cell {
-    pub fn from_coord(x: isize, y: isize) -> Self {
-        Cell {
+    pub fn from_coord(x: usize, y: usize) -> Self {
+        Self {
             walls: [true; 4],
             coord: Coord { x, y },
             visited: false,
@@ -62,9 +74,9 @@ impl Cell {
     }
 
     pub fn cell_direction(&self, cell: &Self) -> Direction {
-        match self.coord.x  - cell.coord.x {
+        match self.coord.x as isize - cell.coord.x as isize {
             x if x == 0 => {
-                match self.coord.y - cell.coord.y {
+                match self.coord.y as isize - cell.coord.y as isize {
                     y if y > 0 => Direction::Left,
                     y if y < 0 => Direction::Right,
                     _ => unreachable!()
@@ -86,15 +98,15 @@ impl Cell {
     }
 
     pub fn is_neighbors(&self, cell: &Self) -> bool {
-        match self.coord.x - cell.coord.x {
+        match self.coord.x as isize - cell.coord.x as isize {
             x if x == 1 || x == -1 => {
-                match self.coord.y - cell.coord.y {
+                match self.coord.y as isize - cell.coord.y as isize {
                     y if y == 0 => true,
                     _ => false
                 }
             },
             x if x == 0 => {
-                match self.coord.y - cell.coord.y {
+                match self.coord.y as isize - cell.coord.y as isize {
                     y if y == 1 || y == -1 => true,
                     _ => false
                 } 
@@ -109,27 +121,54 @@ impl Cell {
         match dir {
             Direction::Down => {
                 if !self.walls[2] && !cell.walls[0] {
-                    return  true;
+                    return true;
                 }
             },
             Direction::Up => {
                 if !self.walls[0] && !cell.walls[2] {
-                    return  true;
+                    return true;
                 } 
             },
             Direction::Left => {
                 if !self.walls[3] && !cell.walls[1] {
-                    return  true;
+                    return true;
                 }
             },
             Direction::Right => {
                 if !self.walls[1] && !cell.walls[3] {
-                    return  true;
+                    return true;
                 }
             },
         }
 
         false
+    }
+
+    pub fn reach(&self, dir: Direction) -> Option<Coord> {
+        match dir {
+            Direction::Down => {
+                if !self.walls[2] {
+                    return Some(Coord { x: self.coord.x + 1, y: self.coord.y });
+                }
+            },
+            Direction::Up => {
+                if !self.walls[0] {
+                    return Some(Coord { x: self.coord.x - 1, y: self.coord.y });
+                } 
+            },
+            Direction::Left => {
+                if !self.walls[3] {
+                    return Some(Coord { x: self.coord.x, y: self.coord.y - 1 });
+                }
+            },
+            Direction::Right => {
+                if !self.walls[1] {
+                    return Some(Coord { x: self.coord.x, y: self.coord.y + 1 });
+                }
+            },
+        }
+
+        None
     }
 }
 
