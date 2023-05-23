@@ -3,6 +3,7 @@ use serde_json::{Value, Map};
 
 pub mod client;
 mod response;
+pub mod cors;
 
 pub static COOKIE_NAME: &'static str = "the_maze";
 

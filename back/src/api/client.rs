@@ -10,7 +10,7 @@ use crate::api::COOKIE_NAME;
 
 #[get("/")]
 async fn status(app: &State<Mutex<App>>, jar: &CookieJar<'_>) -> Response {
-    if let Some(cookie) = jar.get_private(COOKIE_NAME) {
+    if let Some(cookie) = jar.get(COOKIE_NAME) {
         let locked_app = app.lock().await;
         let client = locked_app.clients.get(cookie.value()).expect("Couldn't get client");
 
@@ -32,19 +32,21 @@ async fn login(app: &State<Mutex<App>>, jar: &CookieJar<'_>, login: Form<LoginFo
     let mut locked_app = app.lock().await;
     let id = locked_app.new_client(login.username.to_string());
 
-    jar.add_private(Cookie::new(COOKIE_NAME, id));
+    jar.add(Cookie::new(COOKIE_NAME, id));
 
     Response::from(Status::Ok)
 }
 
 #[post("/new_game")]
 async fn new_game(app: &State<Mutex<App>>, jar: &CookieJar<'_>) -> Response {
-    if let Some(cookie) = jar.get_private(COOKIE_NAME) {
+    if let Some(cookie) = jar.get(COOKIE_NAME) {
         let mut locked_app = app.lock().await;
         let client = locked_app.clients.get_mut(cookie.value()).expect("Couldn't get client");
         let _ = client.start_game();
 
-        return Response::from(Status::Ok);
+        let mut resp = Response::from(Status::Ok);
+        resp.add_object("client", client);
+        return resp;
     }
 
     Response::from(Status::Unauthorized)
@@ -59,7 +61,7 @@ struct MoveForm<'r> {
 async fn move_client(app: &State<Mutex<App>>, jar: &CookieJar<'_>, direction: Form<MoveForm<'_>>) -> Response {
     let mut resp = Response::from(Status::Unauthorized);
 
-    if let Some(cookie) = jar.get_private(COOKIE_NAME) {
+    if let Some(cookie) = jar.get(COOKIE_NAME) {
         let mut locked_app = app.lock().await;
         let client = locked_app.clients.get_mut(cookie.value()).expect("Couldn't get client");
         
@@ -79,12 +81,11 @@ async fn move_client(app: &State<Mutex<App>>, jar: &CookieJar<'_>, direction: Fo
 
         let movement = client.move_cell(dir.unwrap());
 
-        client.maze.as_ref().unwrap().display(client.curr_cell);
-
         // TODO: return a json of the deplacement
         resp.set_status(Status::Ok);
         resp.add_field("movement", &movement.to_string());
-        resp.add_field("direction", direction.direction);
+        resp.add_field("direction", &direction.direction);
+        resp.add_object("client", client);
         return resp;
     }
     

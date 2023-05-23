@@ -68,8 +68,12 @@ impl Object for Client {
         map.insert("is_playing".to_string(), json!(self.is_playing.to_string()));
 
         if self.curr_cell.is_some() {
-            let cell = serde_json::to_string(&self.curr_cell.unwrap()).unwrap();
-            map.insert("curr_cell".to_string(), json!(cell));
+            let maze = self.maze.as_ref().unwrap();
+            let coord = self.curr_cell.as_ref().unwrap();
+
+            let cell = maze.get_cell(Coord { x: coord.x, y: coord.y }).unwrap();
+
+            map.insert("curr_cell".to_string(), json!(cell.walls));
         }
 
         map

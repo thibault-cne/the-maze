@@ -19,8 +19,10 @@ struct App {
 fn server() -> _ {
     rocket::build()
         .manage(Mutex::new(App::new()))
+        .mount("/", api::cors::routes())
         .mount("/", api::routes())
         .mount("/client", api::client::routes())
+        .attach(api::cors::CORS)
 }
 
 impl App {
