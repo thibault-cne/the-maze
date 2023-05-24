@@ -38,7 +38,7 @@ jobs:
           context: ./back
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:back-latest
+          tags: ghcr.io/${{ github.repository }}-back:latest
 
       - name: Build and push backend image
         uses: docker/build-push-action@v3
@@ -46,4 +46,4 @@ jobs:
           context: ./front
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:front-latest
+          tags: ghcr.io/${{ github.repository }}-front:latest

@@ -1,11 +1,11 @@
-FROM rust:1 as builder
+FROM rust:1.69.0 as builder
 WORKDIR /app
 COPY . .
-RUN cargo install --path .
+RUN cargo build --release
 
 
 FROM debian:buster-slim as runner
-COPY --from=builder /usr/local/cargo/bin/rust-rocket-app /usr/local/bin/rust-rocket-app
+COPY --from=builder /app/target/release/the-maze /usr/local/bin/the_maze
 ENV ROCKET_ADDRESS=0.0.0.0
 EXPOSE 8000
-CMD ["rust-rocket-app"]
+CMD ["the_maze"]
