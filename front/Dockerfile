@@ -12,7 +12,7 @@ FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
-COPY --from=builder /app/public .
+COPY --from=builder /app/build .
 COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
