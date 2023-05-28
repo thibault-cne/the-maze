@@ -7,6 +7,7 @@ export function call(
 ): Promise<Response> {
 	// Get the url from the environment
 	let url = import.meta.env.VITE_BACKEND_URL + route;
+	console.log(url);
 
 	// Add the parameters to the url
 	if (parameters) {
