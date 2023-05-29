@@ -10,26 +10,26 @@
 	let logged = false;
 	let name = '';
 	let walls: [boolean, boolean, boolean, boolean] = [false, false, false, false];
-    let animate: [boolean, boolean, boolean, boolean]  = [false, false, false, false];
-    
-    let eventFunc = (e) => {
-            switch (e.key) {
-                case 'ArrowUp':
-                    move('up');
-                    break;
-                case 'ArrowDown':
-                    move('down');
-                    break;
-                case 'ArrowLeft':
-                    move('left');
-                    break;
-                case 'ArrowRight':
-                    move('right');
-                    break;
-                default:
-                    break;
-            }
-    };
+	let animate: [boolean, boolean, boolean, boolean] = [false, false, false, false];
+
+	let eventFunc = (e: KeyboardEvent) => {
+		switch (e.key) {
+			case 'ArrowUp':
+				move('up');
+				break;
+			case 'ArrowDown':
+				move('down');
+				break;
+			case 'ArrowLeft':
+				move('left');
+				break;
+			case 'ArrowRight':
+				move('right');
+				break;
+			default:
+				break;
+		}
+	};
 
 	onMount(() => {
 		if (data.cookie) {
@@ -39,34 +39,44 @@
 				if (res.status === 200) {
 					logged = true;
 
-					res.json().then((json) => {
-						name = json.client.name;
-						walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
+					res
+						.json()
+						.then((json) => {
+							name = json.client.name;
+							walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
 
-						if (json.client.is_playing === 'false') {
-							call('/client/new_game', null, 'POST', null, null).then((res) => {
-								if (res.status === 200) {
-									res.json().then((json) => {
-										walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
-									});
-								} else {
-									alert('An error occured');
-								}
-							});
-						}
-					});
+							if (json.client.is_playing === 'false') {
+								call('/client/new_game', null, 'POST', null, null).then((res) => {
+									if (res.status === 200) {
+										res
+											.json()
+											.then((json) => {
+												walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
+											})
+											.catch((e) => {
+												console.log(e);
+											});
+									} else {
+										alert('An error occured');
+									}
+								});
+							}
+						})
+						.catch((e) => {
+							console.log(e);
+						});
 				} else {
 					alert('An error occured');
 				}
 			});
 		}
 
-        // Handle keypress
-        window.addEventListener('keydown', eventFunc);
+		// Handle keypress
+		window.addEventListener('keydown', eventFunc);
 
-        return () => {
-            window.removeEventListener('keydown', eventFunc);
-        }
+		return () => {
+			window.removeEventListener('keydown', eventFunc);
+		};
 	});
 
 	function login() {
@@ -107,45 +117,45 @@
 		}, 1000);
 	}
 
-    function move(direction: string) {
-        loading = true;
+	function move(direction: string) {
+		loading = true;
 
-        let data = new FormData();
-        data.append('direction', direction);
+		let data = new FormData();
+		data.append('direction', direction);
 
-        let resp = call('/client/move', null, 'POST', data, null);
+		let resp = call('/client/move', null, 'POST', data, null);
 
-        resp.then((res) => {
-            if (res.status === 200) {
-                res.json().then((json) => {
-                    if (json.movement === 'true') {
-                        walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
-                    } else {
-                        switch (json.direction) {
-                            case 'up':
-                                animate[0] = true;
-                                break;
-                            case 'down':
-                                animate[2] = true;
-                                break;
-                            case 'left':
-                                animate[3] = true;  
-                                break;
-                            case 'right':
-                                animate[1] = true;           
-                                break;
-                            default:
-                                break;
-                        };
+		resp.then((res) => {
+			if (res.status === 200) {
+				res.json().then((json) => {
+					if (json.movement === 'true') {
+						walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
+					} else {
+						switch (json.direction) {
+							case 'up':
+								animate[0] = true;
+								break;
+							case 'down':
+								animate[2] = true;
+								break;
+							case 'left':
+								animate[3] = true;
+								break;
+							case 'right':
+								animate[1] = true;
+								break;
+							default:
+								break;
+						}
 
-                        setTimeout(() => {
-                            animate = [false, false, false, false];
-                        }, 220);
-                    }
-                })
-            }
-        })
-    }
+						setTimeout(() => {
+							animate = [false, false, false, false];
+						}, 220);
+					}
+				});
+			}
+		});
+	}
 </script>
 
 {#if logged}
