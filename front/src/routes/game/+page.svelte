@@ -124,6 +124,8 @@
 	}
 
 	function move(direction: string) {
+		if (loading || !logged) return;
+
 		loading = true;
 
 		let data = new FormData();
@@ -178,14 +180,7 @@
 				placeholder="Enter your name"
 				class="input input-bordered input-primary w-full max-w-xs focus:outline-offset-0"
 			/>
-			<button
-				class="btn btn-primary mt-10"
-				class:loading
-				on:click={() => {
-					login();
-				}}
-				>Validate
-			</button>
+			<button class="btn btn-primary mt-10" class:loading on:click={login}>Validate </button>
 		</div>
 	</div>
 {/if}
