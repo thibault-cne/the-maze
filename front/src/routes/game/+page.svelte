@@ -32,7 +32,7 @@
 	};
 
 	onMount(() => {
-		if (data.cookie) {
+		if (data.cookie && data.cookie.includes('the_maze')) {
 			let resp = call('/client/', null, 'GET', null, null);
 
 			resp.then((res) => {
