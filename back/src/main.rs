@@ -22,7 +22,7 @@ fn server() -> _ {
         .mount("/", api::cors::routes())
         .mount("/", api::routes())
         .mount("/client", api::client::routes())
-        .attach(api::cors::CORS)
+        .attach(api::cors::CORS::new(vec!["http://localhost:5173".to_owned(), "https://the-maze.thibault-cne.fr".to_owned()]))
 }
 
 impl App {

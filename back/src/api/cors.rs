@@ -2,7 +2,17 @@ use rocket::http::Header;
 use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
 
-pub struct CORS;
+pub struct CORS {
+    allowed_origins: Vec<String>,
+}
+
+impl CORS {
+    pub fn new(allowed_origins: Vec<String>) -> Self {
+        Self {
+            allowed_origins,
+        }
+    }
+}
 
 #[rocket::async_trait]
 impl Fairing for CORS {
@@ -13,8 +23,13 @@ impl Fairing for CORS {
         }
     }
 
-    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "http://localhost:5173,https://thibault-cne.the-maze.fr"));
+    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+        request.headers().get_one("Origin").map(|origin| {
+            if self.allowed_origins.contains(&origin.to_string()) {
+                response.set_header(Header::new("Access-Control-Allow-Origin", origin));
+            }
+        });
+
         response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PATCH, OPTIONS"));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
