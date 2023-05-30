@@ -32,7 +32,9 @@
 	};
 
 	onMount(() => {
-		if (data.cookie && data.cookie.includes('the_maze')) {
+		console.log('mounting...');
+
+		if (data.cookie) {
 			let resp = call('/client/', null, 'GET', null, null);
 
 			resp.then((res) => {
@@ -54,7 +56,9 @@
 												walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
 											})
 											.catch((e) => {
+												console.log(res);
 												console.log(e);
+												console.log('error on the inner json');
 											});
 									} else {
 										alert('An error occured');
@@ -63,7 +67,9 @@
 							}
 						})
 						.catch((e) => {
+							console.log(res);
 							console.log(e);
+							console.log('error on the outter json');
 						});
 				} else {
 					alert('An error occured');
