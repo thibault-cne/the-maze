@@ -48,4 +48,4 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}-front:latest
           build-args: |
-            "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}""
+            VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}
