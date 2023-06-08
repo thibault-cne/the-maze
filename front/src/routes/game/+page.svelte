@@ -144,6 +144,9 @@
 
 			resp.then((res) => {
 				if (res.status === 200) {
+					res.json().then((json) => {
+						update(json.client);
+					});
 					win = false;
 				} else {
 					alert('An error occured');
