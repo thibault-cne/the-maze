@@ -45,6 +45,15 @@ impl Client {
         Ok(())
     }
 
+    pub fn check_win(&self, dir: Direction) -> bool {
+        let maze = self.maze.as_ref().unwrap();
+        let coord = self.curr_cell.as_ref().unwrap();
+
+        let cell = maze.get_cell(Coord { x: coord.x, y: coord.y }).unwrap();
+
+        maze.is_going_out(cell, &dir)
+    }
+
     pub fn move_cell(&mut self, dir: Direction) -> bool {
         let cell = self.curr_cell.as_ref().unwrap();
         let cell = self.maze.as_ref().unwrap().get_cell(Coord { x: cell.x, y: cell.y }).unwrap();
@@ -74,6 +83,10 @@ impl Object for Client {
             let cell = maze.get_cell(Coord { x: coord.x, y: coord.y }).unwrap();
 
             map.insert("curr_cell".to_string(), json!(cell.walls));
+            map.insert("pos".to_owned(), json!({
+                "x": coord.x,
+                "y": coord.y,
+            }));
         }
 
         map

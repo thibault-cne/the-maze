@@ -3,6 +3,8 @@ use rand::seq::SliceRandom;
 
 use crate::maze::cells::{Cell, Coord};
 
+use self::cells::Direction;
+
 pub mod cells;
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -159,6 +161,26 @@ impl Maze {
         }
 
         if cell.coord.x == self.h_size - 1 && !cell.walls[2] {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn is_going_out(&self, cell: &Cell, dir: &Direction) -> bool {
+        if cell.coord.y == 0 && !cell.walls[3] && dir == &Direction::Left {
+            return true;
+        }
+
+        if cell.coord.y == self.w_size - 1 && !cell.walls[1] && dir == &Direction::Right {
+            return true;
+        }
+
+        if cell.coord.x == 0 && !cell.walls[0] && dir == &Direction::Up {
+            return true;
+        }
+
+        if cell.coord.x == self.h_size - 1 && !cell.walls[2] && dir == &Direction::Down {
             return true;
         }
 

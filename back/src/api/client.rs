@@ -37,8 +37,8 @@ async fn login(app: &State<Mutex<App>>, jar: &CookieJar<'_>, login: Form<LoginFo
     Response::from(Status::Ok)
 }
 
-#[post("/new_game")]
-async fn new_game(app: &State<Mutex<App>>, jar: &CookieJar<'_>) -> Response {
+#[post("/play")]
+async fn play(app: &State<Mutex<App>>, jar: &CookieJar<'_>) -> Response {
     if let Some(cookie) = jar.get(COOKIE_NAME) {
         let mut locked_app = app.lock().await;
         let client = locked_app.clients.get_mut(cookie.value()).expect("Couldn't get client");
@@ -79,6 +79,15 @@ async fn move_client(app: &State<Mutex<App>>, jar: &CookieJar<'_>, direction: Fo
             return resp;
         }
 
+        if client.check_win(dir.unwrap()) {
+            client.is_playing = false;
+            
+            resp.set_status(Status::Ok);
+            resp.add_field("status", "win");
+            resp.add_object("client", client);
+            return resp;
+        }
+
         let movement = client.move_cell(dir.unwrap());
 
         // TODO: return a json of the deplacement
@@ -94,5 +103,5 @@ async fn move_client(app: &State<Mutex<App>>, jar: &CookieJar<'_>, direction: Fo
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    routes![status, login, new_game, move_client]
+    routes![status, login, play, move_client]
 }
