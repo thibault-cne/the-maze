@@ -17,6 +17,8 @@ import wall_left from './wall_left.svg';
 import wall_right from './wall_right.svg';
 import wall_up from './wall_up.svg';
 
+import no_wall from './no_wall.png';
+
 export default function compute_walls(walls: [boolean, boolean, boolean, boolean]) {
 	if (walls[0] && walls[1] && walls[2] && walls[3]) {
 		return four_walls;
@@ -78,5 +80,5 @@ export default function compute_walls(walls: [boolean, boolean, boolean, boolean
 		return wall_left;
 	}
 
-	return '';
+	return no_wall;
 }

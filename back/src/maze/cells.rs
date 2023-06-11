@@ -92,12 +92,12 @@ impl Cell {
         cells
             .into_iter()
             .enumerate()
-            .filter(|(_, c)| self.is_neighbors(c) && !c.visited)
+            .filter(|(_, c)| self.is_neighbor(c) && !c.visited)
             .map(|(i, _)| i)
             .collect::<Vec<usize>>()
     }
 
-    pub fn is_neighbors(&self, cell: &Self) -> bool {
+    pub fn is_neighbor(&self, cell: &Self) -> bool {
         match self.coord.x as isize - cell.coord.x as isize {
             x if x == 1 || x == -1 => {
                 match self.coord.y as isize - cell.coord.y as isize {
@@ -177,5 +177,11 @@ impl Display for Cell {
         write!(f, "x: {} y: {}", self.coord.x, self.coord.y)?;
 
         Ok(())
+    }
+}
+
+impl PartialEq for Cell {
+    fn eq(&self, other: &Self) -> bool {
+        self.coord.x == other.coord.x && self.coord.y == other.coord.y
     }
 }

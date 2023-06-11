@@ -251,4 +251,25 @@ impl Maze {
     pub fn get_cell(&self, coord: Coord) -> Option<&Cell> {
         self.cells.get(coord.x * self.w_size + coord.y)
     }
+
+    pub fn get_cell_neighbours(&self, cell: &Cell) -> Vec<&Cell> {
+        self.cells.iter()
+            .filter(|&c| c != cell && cell.is_neighbor(c))
+            .collect()
+    }
+
+    pub fn get_sub_maze(&self, center: &Coord, size: usize) -> Vec<Option<&Cell>> {
+        let mut sub_maze: Vec<Option<&Cell>> = Vec::new();
+
+        for i in (center.x as isize - size as isize)..(center.x + size + 1) as isize {
+            for j in (center.y as isize - size as isize)..(center.y + size + 1) as isize {
+                match (usize::try_from(i), usize::try_from(j)) {
+                    (Ok(x), Ok(y)) => sub_maze.push(self.get_cell(Coord { x, y })),
+                    (_, _) => sub_maze.push(None),
+                }
+            }
+        }
+
+        sub_maze
+    }
 }

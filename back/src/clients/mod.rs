@@ -83,6 +83,20 @@ impl Object for Client {
             let cell = maze.get_cell(Coord { x: coord.x, y: coord.y }).unwrap();
 
             map.insert("curr_cell".to_string(), json!(cell.walls));
+            map.insert("neighbors".to_owned(), json!(
+                maze.get_sub_maze(coord, 1)
+                    .iter()
+                    .map(|c| 
+                        {
+                            match c {
+                                Some(c) => json!(c.walls),
+                                None => json!(null),
+                            }
+                        }
+                    )
+                    .collect::<Vec<_>>()
+
+            ));
             map.insert("pos".to_owned(), json!({
                 "x": coord.x,
                 "y": coord.y,

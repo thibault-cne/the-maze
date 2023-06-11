@@ -44,6 +44,10 @@ async fn play(app: &State<Mutex<App>>, jar: &CookieJar<'_>) -> Response {
         let client = locked_app.clients.get_mut(cookie.value()).expect("Couldn't get client");
         let _ = client.start_game();
 
+        if let Some(maze) = &client.maze {
+            maze.display(client.curr_cell);
+        }
+
         let mut resp = Response::from(Status::Ok);
         resp.add_object("client", client);
         return resp;

@@ -3,38 +3,31 @@
 	import { call } from '$lib/api';
 	import type { PageData } from './$types';
 	import MazeCell from '$lib/components/MazeCell.svelte';
-	import CanvasMap from '$lib/components/CanvasMap.svelte';
 
 	export let data: PageData;
+
+    type walls = [boolean, boolean, boolean, boolean];
 
 	let loading = false;
 	let logged = false;
 	let name = '';
-	let walls: [boolean, boolean, boolean, boolean] = [false, false, false, false];
-	let animate: [boolean, boolean, boolean, boolean] = [false, false, false, false];
+	let walls: walls = [false, false, false, false];
+    let cells = [];
+	let animate: walls = [false, false, false, false];
 	let win = false;
-
-	let draw: (
-		pos: {
-			x: number;
-			y: number;
-		},
-		walls: [boolean, boolean, boolean, boolean],
-		walls_color: string
-	) => void;
 
 	let eventFunc = (e: KeyboardEvent) => {
 		switch (e.key) {
-			case 'ArrowUp':
+			case 'ArrowUp' || 'z' || 'Z' || 'w' || 'W':
 				move('up');
 				break;
-			case 'ArrowDown':
+			case 'ArrowDown' || 's' || 'S' || 'x' || 'X':
 				move('down');
 				break;
-			case 'ArrowLeft':
+			case 'ArrowLeft' || 'q' || 'Q' || 'a' || 'A':
 				move('left');
 				break;
-			case 'ArrowRight':
+			case 'ArrowRight' || 'd' || 'D' || 'e' || 'E':
 				move('right');
 				break;
 			default:
@@ -43,6 +36,12 @@
 	};
 
 	onMount(() => {
+        cells = [
+            [[false, false, false, false], [false, false, false, false], [false, false, false, false]],
+            [[false, false, false, false], [false, false, false, false], [false, false, false, false]],
+            [[false, false, false, false], [false, false, false, false], [false, false, false, false]]
+        ];
+
 		if (data.cookie) {
 			let resp = call('/client/', null, 'GET', null, null);
 
@@ -94,8 +93,24 @@
 		walls = client.curr_cell as [boolean, boolean, boolean, boolean];
 		let pos = client.pos as { x: number; y: number };
 		pos = { x: pos.y, y: pos.x };
-		console.log(pos);
-		draw(pos, walls, '#ffffff');
+
+        let i = 0;
+        let j = 0;
+
+        client.neighbors.forEach((n: walls) => {
+            if (n == null) {
+                cells[i][j] = [false, false, false, false];
+            } else {
+                cells[i][j] = n as [boolean, boolean, boolean, boolean];
+            }
+
+            j++;
+
+            if (j === 3) {
+                j = 0;
+                i++;
+            }
+        });
 	}
 
 	function login() {
@@ -215,15 +230,14 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid w-full h-full items-center">
-			<div class="flex justify-center items-end h-full">
-				<MazeCell {walls} {animate} />
-			</div>
-			<div class="flex w-full h-full justify-end items-end">
-				<div class="pb-5">
-					<CanvasMap bind:draw />
-				</div>
-			</div>
+		<div class="flex flex-col justify-center items-center w-full">
+			{#each cells as row}
+                <div class="flex flex-row">
+                    {#each row as cell}
+                        <MazeCell walls={cell} {animate} />
+                    {/each}
+                </div>
+            {/each}
 		</div>
 	{/if}
 {:else}
