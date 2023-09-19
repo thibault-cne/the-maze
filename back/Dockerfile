@@ -1,7 +1,6 @@
 FROM rust:1.72 as builder
 WORKDIR /app
 COPY . .
-RUN rustup default nightly
 RUN cargo build --release
 
 
