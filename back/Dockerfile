@@ -1,4 +1,4 @@
-FROM rust:1.69.0 as builder
+FROM rust:1.72 as builder
 WORKDIR /app
 COPY . .
 RUN rustup default nightly
