@@ -2,17 +2,18 @@
 	import { onMount } from 'svelte';
 	import { call } from '$lib/api';
 	import type { PageData } from './$types';
-	import MazeCell from '$lib/components/MazeCell.svelte';
+	import Canvas from '$lib/components/canvas.svelte';
 
 	export let data: PageData;
 
-    type walls = [boolean, boolean, boolean, boolean];
+	type walls = [boolean, boolean, boolean, boolean];
 
+	let canvas: Canvas;
 	let loading = false;
 	let logged = false;
 	let name = '';
 	let walls: walls = [false, false, false, false];
-    let cells = [];
+	let cells: any[] = [];
 	let animate: walls = [false, false, false, false];
 	let win = false;
 
@@ -36,11 +37,23 @@
 	};
 
 	onMount(() => {
-        cells = [
-            [[false, false, false, false], [false, false, false, false], [false, false, false, false]],
-            [[false, false, false, false], [false, false, false, false], [false, false, false, false]],
-            [[false, false, false, false], [false, false, false, false], [false, false, false, false]]
-        ];
+		cells = [
+			[
+				[false, false, false, false],
+				[false, false, false, false],
+				[false, false, false, false]
+			],
+			[
+				[false, false, false, false],
+				[false, false, false, false],
+				[false, false, false, false]
+			],
+			[
+				[false, false, false, false],
+				[false, false, false, false],
+				[false, false, false, false]
+			]
+		];
 
 		if (data.cookie) {
 			let resp = call('/client/', null, 'GET', null, null);
@@ -52,9 +65,6 @@
 					res
 						.json()
 						.then((json) => {
-							name = json.client.name;
-							walls = json.client.curr_cell as [boolean, boolean, boolean, boolean];
-
 							if (json.client.is_playing === 'false') {
 								call('/client/play', null, 'POST', null, null).then((res) => {
 									if (res.status === 200) {
@@ -70,6 +80,8 @@
 										alert('An error occured');
 									}
 								});
+							} else {
+								update(json.client);
 							}
 						})
 						.catch((e) => {
@@ -90,27 +102,32 @@
 	});
 
 	function update(client: any) {
+		// Clear the canvas
+		canvas.clear();
+
 		walls = client.curr_cell as [boolean, boolean, boolean, boolean];
 		let pos = client.pos as { x: number; y: number };
 		pos = { x: pos.y, y: pos.x };
 
-        let i = 0;
-        let j = 0;
+		let i = 0;
+		let j = 0;
 
-        client.neighbors.forEach((n: walls) => {
-            if (n == null) {
-                cells[i][j] = [false, false, false, false];
-            } else {
-                cells[i][j] = n as [boolean, boolean, boolean, boolean];
-            }
+		client.neighbors.forEach((n: walls) => {
+			if (n == null) {
+				cells[i][j] = [false, false, false, false];
+			} else {
+				cells[i][j] = n as [boolean, boolean, boolean, boolean];
+			}
 
-            j++;
+			canvas.draw({ x: j, y: i }, cells[i][j], 'white');
 
-            if (j === 3) {
-                j = 0;
-                i++;
-            }
-        });
+			j++;
+
+			if (j === 3) {
+				j = 0;
+				i++;
+			}
+		});
 	}
 
 	function login() {
@@ -230,14 +247,8 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex flex-col justify-center items-center w-full">
-			{#each cells as row}
-                <div class="flex flex-row">
-                    {#each row as cell}
-                        <MazeCell walls={cell} {animate} />
-                    {/each}
-                </div>
-            {/each}
+		<div class="flex flex-col justify-center items-center w-full h-full">
+			<Canvas bind:this={canvas} animate={animate} />
 		</div>
 	{/if}
 {:else}
