@@ -4,7 +4,7 @@ COPY . .
 RUN cargo build --release
 
 
-FROM debian:bullseye-stable as runner
+FROM ubuntu:22.04 as runner
 COPY --from=builder /app/target/release/the-maze /usr/local/bin/the_maze
 ENV ROCKET_ADDRESS=0.0.0.0
 EXPOSE 8000
